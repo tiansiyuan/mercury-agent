@@ -6,6 +6,7 @@ import { createCreateFileTool } from './filesystem/create-file.js';
 import { createListDirTool } from './filesystem/list-dir.js';
 import { createDeleteFileTool } from './filesystem/delete-file.js';
 import { createRunCommandTool } from './shell/run-command.js';
+import { createApproveCommandTool } from './shell/approve-command.js';
 import { createInstallSkillTool } from './skills/install-skill.js';
 import { createListSkillsTool } from './skills/list-skills.js';
 import { createUseSkillTool } from './skills/use-skill.js';
@@ -43,7 +44,8 @@ export class CapabilityRegistry {
 
     if (manifest.capabilities.shell.enabled) {
       this.tools.run_command = createRunCommandTool(this.permissions);
-      logger.info('Shell tool registered');
+      this.tools.approve_command = createApproveCommandTool(this.permissions);
+      logger.info('Shell tools registered');
     }
 
     if (this.skillLoader) {

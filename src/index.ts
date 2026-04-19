@@ -20,23 +20,23 @@ function hr() {
 
 function banner() {
   console.log('');
-  console.log(chalk.cyan('     ┌────────────────────────────────────┐'));
-  console.log(chalk.cyan('     │') + chalk.bold.white('      M E R C U R Y              ') + chalk.cyan('│'));
-  console.log(chalk.cyan('     └────────────────────────────────────┘'));
-  console.log(chalk.dim('     v0.1.0 — an AI agent for personal tasks'));
-  console.log(chalk.dim('     by Cosmic Stack — mercury.cosmicstack.org'));
+  console.log(chalk.cyan('  ═════════════════════════════════════'));
+  console.log(chalk.bold.white('       M E R C U R Y'));
+  console.log(chalk.cyan('  ═════════════════════════════════════'));
+  console.log(chalk.dim('  v0.1.0 — an AI agent for personal tasks'));
+  console.log(chalk.dim('  by Cosmic Stack — mercury.cosmicstack.org'));
   console.log('');
 }
 
 function splashScreen() {
   console.log('');
-  console.log(chalk.cyan('     ┌────────────────────────────────────┐'));
-  console.log(chalk.cyan('     │') + chalk.bold.white('      M E R C U R Y              ') + chalk.cyan('│'));
-  console.log(chalk.cyan('     └────────────────────────────────────┘'));
+  console.log(chalk.cyan('  ═════════════════════════════════════'));
+  console.log(chalk.bold.white('       M E R C U R Y'));
+  console.log(chalk.cyan('  ═════════════════════════════════════'));
   console.log('');
-  console.log(chalk.dim('     an AI agent for personal tasks'));
-  console.log(chalk.cyan('     by Cosmic Stack'));
-  console.log(chalk.dim('     mercury.cosmicstack.org'));
+  console.log(chalk.dim('  an AI agent for personal tasks'));
+  console.log(chalk.cyan('  by Cosmic Stack'));
+  console.log(chalk.dim('  mercury.cosmicstack.org'));
   console.log('');
 }
 

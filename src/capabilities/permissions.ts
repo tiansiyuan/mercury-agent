@@ -91,6 +91,8 @@ const DEFAULT_MANIFEST: PermissionsManifest = {
         'df *',
         'du *',
         'uname *',
+        'curl *',
+        'wget *',
       ],
       needsApproval: [
         'npm publish *',
@@ -127,6 +129,7 @@ export class PermissionManager {
   private askHandler?: (prompt: string) => Promise<string>;
   private autoApproveAll = false;
   private elevatedCommands: Set<string> = new Set();
+  private pendingApprovals: Set<string> = new Set();
 
   constructor() {
     this.cwd = process.cwd();
@@ -164,6 +167,14 @@ export class PermissionManager {
 
   isShellElevated(): boolean {
     return this.elevatedCommands.has('run_command');
+  }
+
+  addPendingApproval(baseCommand: string): void {
+    this.pendingApprovals.add(baseCommand);
+  }
+
+  clearPendingApprovals(): void {
+    this.pendingApprovals.clear();
   }
 
   private load(): PermissionsManifest {
@@ -246,6 +257,12 @@ export class PermissionManager {
     }
 
     const trimmed = command.trim();
+
+    const baseCmd = trimmed.split(/\s+/)[0];
+    if (this.pendingApprovals.has(baseCmd)) {
+      logger.info({ cmd: trimmed }, 'Shell command auto-approved (pending approval)');
+      return { allowed: true, needsApproval: false };
+    }
 
     for (const pattern of shell.blocked) {
       if (this.matchPattern(trimmed, pattern)) {

@@ -9,8 +9,8 @@ export function createRunCommandTool(permissions: PermissionManager) {
   return tool({
     description: `Run a shell command. Commands run in the current working directory unless an absolute path is given.
 Blocked commands (sudo, rm -rf /, etc.) are never executed.
-Auto-approved commands (ls, cat, git status, etc.) run without asking.
-Other commands require user approval (y/n/always). "always" saves the approval for future use.`,
+Auto-approved commands (ls, cat, git status, curl, etc.) run without asking.
+Other commands require user approval — tell the user what command you want to run and ask for confirmation. If they say "yes", try again. If they say "always", use the approve_command tool.`,
     parameters: z.object({
       command: z.string().describe('The shell command to execute'),
     }),
@@ -18,13 +18,11 @@ Other commands require user approval (y/n/always). "always" saves the approval f
       const check = await permissions.checkShellCommand(command);
       if (!check.allowed) {
         if (check.needsApproval) {
-          const response = await askApproval(command, permissions);
-          if (!response) {
-            return `Command "${command}" was not approved by user.`;
-          }
-        } else {
-          return `Error: ${check.reason}`;
+          const baseCmd = command.trim().split(/\s+/)[0];
+          permissions.addPendingApproval(baseCmd);
+          return `⚠ Command requires approval: ${command}\n\nTell the user what this command does and ask for permission. If they approve, try running it again. If they say "always", use the approve_command tool to permanently approve this command type.`;
         }
+        return `Error: ${check.reason}`;
       }
 
       try {
@@ -48,28 +46,4 @@ Other commands require user approval (y/n/always). "always" saves the approval f
       }
     },
   });
-}
-
-async function askApproval(command: string, permissions: PermissionManager): Promise<boolean> {
-  const handler = (permissions as any).askHandler;
-  if (!handler) {
-    return false;
-  }
-
-  const response = await handler(
-    `Mercury wants to run: ${command}\nAllow? (y/n/always): `
-  );
-
-  const normalized = response.toLowerCase().trim();
-
-  if (normalized === 'always') {
-    permissions.addApprovedCommand(command);
-    return true;
-  }
-
-  if (normalized === 'y' || normalized === 'yes') {
-    return true;
-  }
-
-  return false;
 }

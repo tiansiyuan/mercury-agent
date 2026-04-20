@@ -150,3 +150,43 @@ export function showLogs(): void {
   const lines = content.split('\n').slice(-100);
   console.log(lines.join('\n'));
 }
+
+export function tryAutoDaemonize(): boolean {
+  try {
+    const status = getDaemonStatus();
+    if (status.running && status.pid) {
+      return true;
+    }
+
+    if (status.pid && !status.running) {
+      try { unlinkSync(pidPath()); } catch {}
+    }
+
+    const home = getMercuryHome();
+    if (!existsSync(home)) {
+      mkdirSync(home, { recursive: true });
+    }
+
+    const logFile = logPath();
+    const isWin = process.platform === 'win32';
+    const outFd = openSync(logFile, 'a');
+
+    const child = spawn(process.execPath, [process.argv[1], 'start', '--daemon'], {
+      detached: true,
+      stdio: ['ignore', outFd, outFd],
+      env: { ...process.env },
+      windowsHide: isWin,
+    });
+
+    child.unref();
+
+    if (!child.pid) {
+      return false;
+    }
+
+    writeFileSync(pidPath(), String(child.pid));
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -16,7 +16,7 @@ import { TokenBudget } from './utils/tokens.js';
 import { CapabilityRegistry } from './capabilities/registry.js';
 import { SkillLoader } from './skills/loader.js';
 import { getManual } from './utils/manual.js';
-import { startBackground, stopDaemon, showLogs, getDaemonStatus, restartDaemon } from './cli/daemon.js';
+import { startBackground, stopDaemon, showLogs, getDaemonStatus, restartDaemon, tryAutoDaemonize } from './cli/daemon.js';
 import { installService, uninstallService, showServiceStatus, isServiceInstalled } from './cli/service.js';
 import { runWithWatchdog } from './cli/watchdog.js';
 
@@ -180,8 +180,36 @@ async function configure(existingConfig?: MercuryConfig): Promise<void> {
   console.log(chalk.green(`  ✓ Permissions seeded in ${home}/permissions.yaml`));
   console.log(chalk.green(`  ✓ Skills directory ready in ${home}/skills/`));
   console.log('');
-  console.log(chalk.cyan(`  ${config.identity.name} is ready. Run \`mercury start\` to begin.`));
+  console.log(chalk.cyan(`  ${config.identity.name} is ready. Run \`mercury start\` to chat.`));
   console.log(chalk.dim('  mercury.cosmicstack.org'));
+  console.log('');
+}
+
+function autoDaemonize(): void {
+  const daemon = getDaemonStatus();
+  if (daemon.running) {
+    return;
+  }
+
+  console.log(chalk.dim('  Setting up background mode...'));
+
+  try {
+    if (!isServiceInstalled()) {
+      installService();
+    }
+  } catch {
+    console.log(chalk.dim('  Service install skipped (can run `mercury service install` later).'));
+  }
+
+  const ok = tryAutoDaemonize();
+  if (ok) {
+    const status = getDaemonStatus();
+    console.log(chalk.green(`  ✓ Mercury is running in background (PID: ${status.pid})`));
+    console.log(chalk.green('  ✓ Auto-starts on login. Auto-restarts on crash.'));
+    console.log(chalk.dim('  Use `mercury stop` to stop. `mercury restart` to restart.'));
+  } else {
+    console.log(chalk.dim('  Background mode not available. Run `mercury up` to set it up.'));
+  }
   console.log('');
 }
 
@@ -312,6 +340,7 @@ program
   .action(async () => {
     if (!isSetupComplete()) {
       await configure();
+      autoDaemonize();
       return;
     }
     await runAgent();

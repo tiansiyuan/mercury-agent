@@ -49,10 +49,17 @@ export function getManual(): string {
 
   const commands = [
     ['mercury', 'Start the agent (same as mercury start)'],
-    ['mercury start', 'Start the agent'],
+    ['mercury start', 'Start the agent in foreground'],
+    ['mercury start -d', 'Start in background (daemon mode)'],
+    ['mercury stop', 'Stop a background Mercury process'],
+    ['mercury logs', 'Show recent daemon logs'],
+    ['mercury doctor', 'Reconfigure settings (Enter keeps current)'],
     ['mercury setup', 'Re-run the setup wizard'],
-    ['mercury status', 'Show current configuration'],
+    ['mercury status', 'Show config and daemon status'],
     ['mercury help', 'Show this manual'],
+    ['mercury service install', 'Install as system service (auto-start)'],
+    ['mercury service uninstall', 'Uninstall system service'],
+    ['mercury service status', 'Show system service status'],
     ['mercury --verbose', 'Start with debug logging on stderr'],
   ];
 

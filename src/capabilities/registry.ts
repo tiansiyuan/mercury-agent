@@ -28,6 +28,14 @@ import type { Scheduler } from '../core/scheduler.js';
 import type { TokenBudget } from '../utils/tokens.js';
 import { logger } from '../utils/logger.js';
 
+export interface ChatCommandContext {
+  toolNames: () => string[];
+  skillNames: () => string[];
+  config: () => import('../utils/config.js').MercuryConfig;
+  tokenBudget: () => import('../utils/tokens.js').TokenBudget;
+  manual: () => string;
+}
+
 export class CapabilityRegistry {
   readonly permissions: PermissionManager;
   private tools: Record<string, Tool> = {};
@@ -37,12 +45,21 @@ export class CapabilityRegistry {
   private sendFileHandler?: (filePath: string) => Promise<void>;
   private currentChannelId = 'cli';
   private currentChannelType = 'cli';
+  private chatCommandContext?: ChatCommandContext;
 
   constructor(skillLoader?: SkillLoader, scheduler?: Scheduler, tokenBudget?: TokenBudget) {
     this.permissions = new PermissionManager();
     this.skillLoader = skillLoader;
     this.scheduler = scheduler;
     this.tokenBudget = tokenBudget;
+  }
+
+  setChatCommandContext(ctx: ChatCommandContext): void {
+    this.chatCommandContext = ctx;
+  }
+
+  getChatCommandContext(): ChatCommandContext | undefined {
+    return this.chatCommandContext;
   }
 
   setChannelContext(channelId: string, channelType: string): void {

@@ -118,6 +118,11 @@ export class Agent {
         return;
       }
 
+      if (await this.handleChatCommand(trimmed, msg.channelType, msg.channelId)) {
+        this.lifecycle.transition('idle');
+        return;
+      }
+
       if (this.tokenBudget.isOverBudget()) {
         const channel = this.channels.getChannelForMessage(msg);
         if (channel && msg.channelType !== 'internal') {
@@ -489,5 +494,62 @@ export class Agent {
     } else {
       await channel.send(`Unknown budget command "${action}". Available: /budget, /budget override, /budget reset, /budget set <number>, /budget status`, channelId);
     }
+  }
+
+  private async handleChatCommand(content: string, channelType: string, channelId: string): Promise<boolean> {
+    const cmd = content.toLowerCase().trim();
+    const channel = this.channels.get(channelType as any);
+    if (!channel) return false;
+
+    const ctx = this.capabilities.getChatCommandContext();
+    if (!ctx) return false;
+
+    if (cmd === '/help') {
+      await channel.send(ctx.manual(), channelId);
+      return true;
+    }
+
+    if (cmd === '/status') {
+      const config = ctx.config();
+      const budget = ctx.tokenBudget();
+      const lines = [
+        `**${config.identity.name}** — Status`,
+        `Owner: ${config.identity.owner || '(not set)'}`,
+        `Provider: ${config.providers.default}`,
+        `Telegram: ${config.channels.telegram.enabled ? 'enabled' : 'disabled'}`,
+        `Budget: ${budget.getStatusText()}`,
+        `Skills: ${ctx.skillNames().length > 0 ? ctx.skillNames().join(', ') : 'none'}`,
+      ];
+      await channel.send(lines.join('\n'), channelId);
+      return true;
+    }
+
+    if (cmd === '/tools') {
+      const tools = ctx.toolNames();
+      const grouped = [
+        `**${tools.length} tools loaded:**`,
+        '',
+        ...tools.sort().map(t => `• \`${t}\``),
+      ];
+      await channel.send(grouped.join('\n'), channelId);
+      return true;
+    }
+
+    if (cmd === '/skills') {
+      const names = ctx.skillNames();
+      if (names.length === 0) {
+        await channel.send('No skills installed. Ask me to "install skill from <url>" to add one.', channelId);
+      } else {
+        const lines = [
+          `**${names.length} skill${names.length > 1 ? 's' : ''} installed:**`,
+          '',
+          ...names.map(n => `• ${n}`),
+        ];
+        await channel.send(lines.join('\n'), channelId);
+      }
+      return true;
+    }
+
+    return false;
   }
 }

@@ -1,12 +1,16 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { config as loadDotenv } from 'dotenv';
 
-loadDotenv();
-
 const MERCURY_HOME = join(homedir(), '.mercury');
+
+loadDotenv();
+const mercuryEnvPath = join(MERCURY_HOME, '.env');
+if (existsSync(mercuryEnvPath)) {
+  loadDotenv({ path: mercuryEnvPath });
+}
 
 export function getMercuryHome(): string {
   return process.env.MERCURY_HOME || MERCURY_HOME;

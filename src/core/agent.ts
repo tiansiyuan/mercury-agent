@@ -385,6 +385,12 @@ export class Agent {
     if (this.tokenBudget.getUsagePercentage() > 70) {
       prompt += '\nBe concise to conserve tokens.';
     }
+    const toolNames = this.capabilities.getToolNames();
+    const githubTools = ['create_pr', 'review_pr', 'list_issues', 'create_issue', 'github_api'];
+    const hasGitHub = githubTools.some(t => toolNames.includes(t));
+    if (hasGitHub) {
+      prompt += '\n\nGitHub companion is active. You can create pull requests, review PRs, manage issues, and use the GitHub API. When the user asks to create a PR, use create_pr. When they ask about issues, use list_issues or create_issue. When they ask to review a PR, use review_pr.';
+    }
     return prompt;
   }
 

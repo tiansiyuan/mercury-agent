@@ -4,7 +4,6 @@ import { dirname, join } from 'node:path';
 import { Command } from 'commander';
 import readline from 'node:readline';
 import chalk from 'chalk';
-import figlet from 'figlet';
 import { loadConfig, saveConfig, isSetupComplete, getMercuryHome, ensureCreatorField } from './utils/config.js';
 import type { MercuryConfig } from './utils/config.js';
 import { logger } from './utils/logger.js';
@@ -31,11 +30,18 @@ function hr() {
   console.log(chalk.dim('─'.repeat(50)));
 }
 
+const MERCURY_ASCII = [
+  '    __  _____________  ________  ________  __',
+  '   /  |/  / ____/ __ \\/ ____/ / / / __ \\/ < /',
+  '  / /|_/ / __/ / /_/ / /   / / / / /_/ /\\  / ',
+  ' / /  / / /___/ _, _/ /___/ /_/ / _, _/ / /  ',
+  '/_/  /_/_____/_/ |_|\\____/\\____/_/ |_| /_/   ',
+].filter(l => l.trim());
+
 function banner() {
   console.log('');
-  const art = figlet.textSync('MERCURY', { font: 'Slant', horizontalLayout: 'default' });
-  for (const line of art.split('\n')) {
-    if (line.trim()) console.log(chalk.bold.cyan(`  ${line}`));
+  for (const line of MERCURY_ASCII) {
+    console.log(chalk.bold.cyan(`  ${line}`));
   }
   console.log('');
   console.log(chalk.white('  an AI agent for personal tasks'));
@@ -45,9 +51,8 @@ function banner() {
 
 function splashScreen() {
   console.log('');
-  const art = figlet.textSync('MERCURY', { font: 'Slant', horizontalLayout: 'default' });
-  for (const line of art.split('\n')) {
-    if (line.trim()) console.log(chalk.bold.cyan(`  ${line}`));
+  for (const line of MERCURY_ASCII) {
+    console.log(chalk.bold.cyan(`  ${line}`));
   }
   console.log('');
   console.log(chalk.dim('  an AI agent for personal tasks'));

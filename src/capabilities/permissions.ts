@@ -364,21 +364,24 @@ export class PermissionManager {
     return undefined;
   }
 
+  async requestScopeExternal(path: string, mode: 'read' | 'write'): Promise<{ allowed: boolean; reason?: string }> {
+    return this.requestScope(path, mode);
+  }
+
   private async requestScope(path: string, mode: 'read' | 'write'): Promise<{ allowed: boolean; reason?: string }> {
     if (!this.askHandler) {
-      return { allowed: false, reason: `No permission to ${mode} ${path}. Add scope to ~/.mercury/permissions.yaml` };
+      return { allowed: false, reason: `Permission denied for ${mode} access to ${path}` };
     }
 
-    const response = await this.askHandler(
-      `Mercury needs ${mode} access to ${path}. Allow? (y/n/always): `
-    );
+    const prompt = `Mercury needs ${mode} access to:\n${path}\n\nAllow access?`;
+    const response = await this.askHandler(prompt);
 
-    if (response.toLowerCase() === 'always') {
+    if (response === 'always') {
       this.addScope(path, mode === 'read', mode === 'write');
       return { allowed: true };
     }
 
-    if (response.toLowerCase() === 'y' || response.toLowerCase() === 'yes') {
+    if (response === 'yes' || response === 'y') {
       return { allowed: true };
     }
 

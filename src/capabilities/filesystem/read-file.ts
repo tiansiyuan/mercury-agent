@@ -14,7 +14,8 @@ export function createReadFileTool(permissions: PermissionManager) {
       const resolved = resolve(path);
       const check = await permissions.checkFsAccess(resolved, 'read');
       if (!check.allowed) {
-        return `Error: ${check.reason}`;
+        const parentDir = resolve(resolved, '..');
+        return `Error: Permission denied for read access to ${resolved}. Use the approve_scope tool with path="${parentDir}" and mode="read" to request access from the user.`;
       }
 
       if (!existsSync(resolved)) {

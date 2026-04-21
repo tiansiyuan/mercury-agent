@@ -17,7 +17,8 @@ export function createEditFileTool(permissions: PermissionManager) {
 
       const fsCheck = await permissions.checkFsAccess(resolved, 'write');
       if (!fsCheck.allowed) {
-        return `Error: ${fsCheck.reason}`;
+        const parentDir = resolve(resolved, '..');
+        return `Error: Permission denied for write access to ${resolved}. Use the approve_scope tool with path="${parentDir}" and mode="write" to request access from the user.`;
       }
 
       try {

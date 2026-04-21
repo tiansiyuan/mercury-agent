@@ -7,6 +7,7 @@ import { createListDirTool } from './filesystem/list-dir.js';
 import { createDeleteFileTool } from './filesystem/delete-file.js';
 import { createEditFileTool } from './filesystem/edit-file.js';
 import { createSendFileTool } from './filesystem/send-file.js';
+import { createApproveScopeTool } from './filesystem/approve-scope.js';
 import { createRunCommandTool } from './shell/run-command.js';
 import { createApproveCommandTool } from './shell/approve-command.js';
 import { createInstallSkillTool } from './skills/install-skill.js';
@@ -89,6 +90,8 @@ export class CapabilityRegistry {
       if (this.sendFileHandler) {
         this.tools.send_file = createSendFileTool(this.permissions, this.sendFileHandler);
       }
+
+      this.tools.approve_scope = createApproveScopeTool(this.permissions);
 
       logger.info('Filesystem tools registered');
     }

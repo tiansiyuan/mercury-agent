@@ -110,14 +110,51 @@ export class CLIChannel extends BaseChannel {
   async stream(content: AsyncIterable<string>, _targetId?: string): Promise<string> {
     this.closeActiveMenu();
     this.beginOutput();
+
+    if (!process.stdout.isTTY) {
+      process.stdout.write(chalk.cyan(`  ${this.agentName}: `));
+      let full = '';
+      for await (const chunk of content) {
+        process.stdout.write(chunk);
+        full += chunk;
+      }
+      console.log('\n');
+      this.endOutput();
+      return full;
+    }
+
     console.log('');
     process.stdout.write(chalk.cyan(`  ${this.agentName}: `));
+    const prefixLines = 2;
+
     let full = '';
     for await (const chunk of content) {
       process.stdout.write(chunk);
       full += chunk;
     }
-    console.log('\n');
+
+    const termWidth = process.stdout.columns || 80;
+    let wrappedLines = 0;
+    for (const line of full.split('\n')) {
+      const visualLen = line.replace(/\x1b\[[0-9;]*m/g, '').length;
+      wrappedLines += Math.max(1, Math.ceil((visualLen + 4) / termWidth));
+    }
+    const totalLines = prefixLines + wrappedLines;
+
+    process.stdout.write(`\x1b[${totalLines}A`);
+    for (let i = 0; i < totalLines; i++) {
+      process.stdout.write('\x1b[2K\x1b[1B');
+    }
+    process.stdout.write(`\x1b[${totalLines}A`);
+
+    const rendered = renderMarkdown(full);
+    const indented = rendered
+      .split('\n')
+      .map((line: string) => `  ${line}`)
+      .join('\n');
+    console.log(chalk.cyan(`  ${this.agentName}:`));
+    console.log(indented);
+    console.log('');
     this.endOutput();
     return full;
   }

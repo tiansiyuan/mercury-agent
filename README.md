@@ -235,4 +235,4 @@ MIT © [Cosmic Stack](https://github.com/cosmicstack-labs)
 
 ## Suggestions and Contributions
 
-For suggestions, contributions, or any inquiries, please reach out to us at [support@cosmicstack.org](mailto:support@cosmicstack.org).
+For suggestions, contributions, or any inquiries, please reach out to us at [mercury@cosmicstack.org](mailto:mercury@cosmicstack.org).

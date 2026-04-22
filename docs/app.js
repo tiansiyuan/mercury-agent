@@ -198,4 +198,15 @@
       }
     });
   });
+
+  fetch('https://api.github.com/repos/cosmicstack-labs/mercury-agent')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var el = document.getElementById('ghStars');
+      if (el && data.stargazers_count != null) {
+        var n = data.stargazers_count;
+        el.textContent = n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : n;
+      }
+    })
+    .catch(function () {});
 })();

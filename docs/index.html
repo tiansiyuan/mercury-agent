@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mercury — Soul-Driven AI Agent with Permission Guardrails | Cosmic Stack</title>
   <meta name="description"
-    content="The AI agent that asks before it acts. Permission guardrails, token efficiency, and full control. Runs 24/7 from CLI or Telegram. 21 built-in tools, skill system, scheduling.">
+    content="The AI agent that asks before it acts. Permission guardrails, token efficiency, full control, and GitHub companion. Runs 24/7 from CLI or Telegram. 26 built-in tools, skill system, scheduling.">
   <meta name="author" content="Cosmic Stack">
   <meta name="robots" content="index, follow">
   <meta name="keywords"
@@ -46,7 +46,7 @@
     "@type": "SoftwareApplication",
     "name": "Mercury",
     "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Node.js 20+",
+    "operatingSystem": "Node.js 18+",
     "description": "Soul-driven AI agent with permission guardrails, token budgets, and multi-channel access. Runs 24/7 from CLI or Telegram.",
     "url": "https://mercury.cosmicstack.org",
     "offers": {
@@ -80,10 +80,14 @@
         <a href="#how-it-works">Install</a>
         <a href="#demo">Demo</a>
         <a href="#capabilities">Capabilities</a>
+        <a href="#github">GitHub</a>
         <a href="#compare">Compare</a>
         <a href="docs.html">Docs</a>
-        <a href="https://github.com/cosmicstack-labs/mercury-agent" class="nav-cta" target="_blank"
-          rel="noopener">GitHub</a>
+        <a href="https://github.com/cosmicstack-labs/mercury-agent" class="github-btn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="vertical-align:-2px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span class="github-btn-text">Star</span>
+          <span class="github-btn-count" id="ghStars"></span>
+        </a>
       </div>
       <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
     </div>
@@ -100,7 +104,7 @@
 /_/  /_/_____/_/ |_|\____/\____/_/ |_| /_/
       </pre>
       <p class="hero-tagline">Soul-driven. Token-efficient. Always on.</p>
-      <p class="hero-sub">Your personal AI agent with 21 built-in tools, skill system, multi-channel access, and
+      <p class="hero-sub">Your personal AI agent with 26 built-in tools, skill system, multi-channel access, GitHub companion, and
         hardened permissions. Runs 24/7 from your terminal or Telegram.</p>
       <div class="hero-actions">
         <a href="#how-it-works" class="btn btn-primary">Get Started</a>
@@ -213,7 +217,7 @@
 
   <section id="capabilities" class="section section-dark">
     <div class="container">
-      <h2 class="section-title">21 Built-In Tools</h2>
+      <h2 class="section-title">26 Built-In Tools</h2>
       <p class="section-sub">Plus extensible skills, scheduling, and memory.</p>
       <div class="caps-grid">
         <div class="cap-group" data-reveal>
@@ -226,6 +230,7 @@
             <li><code>list_dir</code> — List directory contents</li>
             <li><code>delete_file</code> — Delete a file</li>
             <li><code>send_file</code> — Send file to user (Telegram upload)</li>
+            <li><code>approve_scope</code> — Request directory access</li>
           </ul>
         </div>
         <div class="cap-group" data-reveal>
@@ -250,6 +255,17 @@
           <h3>🌐 Web</h3>
           <ul>
             <li><code>fetch_url</code> — Fetch &amp; strip HTML to text</li>
+          </ul>
+        </div>
+        <div class="cap-group" data-reveal>
+          <h3>🐙 GitHub</h3>
+          <ul>
+            <li><code>create_pr</code> — Create pull requests</li>
+            <li><code>review_pr</code> — Review PRs + post comments</li>
+            <li><code>list_issues</code> — List &amp; filter issues</li>
+            <li><code>create_issue</code> — Create new issues</li>
+            <li><code>github_api</code> — Raw API access (escape hatch)</li>
+            <li>Co-authored-by on every commit</li>
           </ul>
         </div>
         <div class="cap-group" data-reveal>
@@ -336,6 +352,12 @@
               <td class="highlight">Blocklist + scope + approval</td>
               <td class="partial">Confirmation prompts</td>
               <td class="partial">Permission prompts</td>
+            </tr>
+            <tr>
+              <td>GitHub Companion</td>
+              <td class="highlight">PRs, issues, co-authored commits</td>
+              <td class="no">—</td>
+              <td class="no">—</td>
             </tr>
             <tr>
               <td>Proactive Notifications</td>
@@ -437,6 +459,50 @@
     </div>
   </section>
 
+  <section id="github" class="section">
+    <div class="container">
+      <h2 class="section-title">GitHub Companion</h2>
+      <p class="section-sub">Your agent, your commits, your repos.</p>
+      <div class="features-grid" style="max-width: 900px; margin: 0 auto;">
+        <div class="feature-card" data-reveal>
+          <div class="feature-icon">🐙</div>
+          <h3>Co-Authored Commits</h3>
+          <p>Every Mercury-assisted commit gets a <code>Co-authored-by: Mercury</code> trailer. Mercury's avatar appears alongside yours in GitHub's commit history.</p>
+        </div>
+        <div class="feature-card" data-reveal>
+          <div class="feature-icon">🔀</div>
+          <h3>Pull Requests</h3>
+          <p>Create PRs, review diffs, and post review comments — all through Mercury's tools. Just say "create a PR" or "review the open PRs".</p>
+        </div>
+        <div class="feature-card" data-reveal>
+          <div class="feature-icon">📋</div>
+          <h3>Issue Management</h3>
+          <p>List, filter, and create issues. Schedule daily issue checks. Mercury keeps your backlog moving without you touching the browser.</p>
+        </div>
+        <div class="feature-card" data-reveal>
+          <div class="feature-icon">🔑</div>
+          <h3>Self-Hosted Auth</h3>
+          <p>Uses a fine-grained Personal Access Token stored on your machine. No accounts, no OAuth servers, no cloud dependencies. Your token, your repos, your control.</p>
+        </div>
+      </div>
+      <div class="terminal-window" style="max-width: 680px; margin: 48px auto 0;">
+        <div class="terminal-bar">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="terminal-title">terminal</span>
+        </div>
+        <div class="terminal-body" style="min-height: auto; padding: 16px 24px;">
+          <p style="margin:0;color:var(--gray);">$ <span style="color:var(--cyan);">mercury doctor</span></p>
+          <p style="margin:0;color:var(--gray-dim);">GitHub username: salmanqureshi</p>
+          <p style="margin:0;color:var(--gray-dim);">GitHub email: mercury@cosmicstack.org</p>
+          <p style="margin:0;color:var(--gray-dim);">GitHub PAT (repo scope): ••••••••</p>
+          <p style="margin:0;color:var(--green);">✓ GitHub tools registered (5)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="architecture" class="section section-dark">
     <div class="container">
       <h2 class="section-title">Under the Hood</h2>
@@ -444,7 +510,7 @@
       <div class="arch-grid">
         <div class="arch-card" data-reveal>
           <div class="arch-label">Core</div>
-          <div class="arch-value">TypeScript + Node.js 20+</div>
+          <div class="arch-value">TypeScript + Node.js 18+</div>
           <div class="arch-desc">ESM, tsup build, zero native deps</div>
         </div>
         <div class="arch-card" data-reveal>
@@ -482,7 +548,7 @@
       <div class="cta-terminal">
         <code>npm i -g @cosmicstack/mercury-agent && mercury</code>
       </div>
-      <p class="cta-sub">That's it. 60 seconds to your own AI agent.</p>
+      <p class="cta-sub">That's it. 60 seconds to your own AI agent with GitHub companion.</p>
       <div class="cta-links">
         <a href="https://github.com/cosmicstack-labs/mercury-agent" target="_blank" rel="noopener">GitHub →</a>
         <a href="https://github.com/cosmicstack-labs/mercury-agent/issues" target="_blank" rel="noopener">Report an

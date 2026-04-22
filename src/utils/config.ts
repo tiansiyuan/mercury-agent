@@ -1,12 +1,16 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { config as loadDotenv } from 'dotenv';
 
-loadDotenv();
-
 const MERCURY_HOME = join(homedir(), '.mercury');
+
+loadDotenv();
+const mercuryEnvPath = join(MERCURY_HOME, '.env');
+if (existsSync(mercuryEnvPath)) {
+  loadDotenv({ path: mercuryEnvPath });
+}
 
 export function getMercuryHome(): string {
   return process.env.MERCURY_HOME || MERCURY_HOME;
@@ -54,6 +58,12 @@ export interface MercuryConfig {
       pairedChatId?: number;
       pairedUsername?: string;
     };
+  };
+  github: {
+    username: string;
+    email: string;
+    defaultOwner: string;
+    defaultRepo: string;
   };
   memory: {
     dir: string;
@@ -147,6 +157,12 @@ export function getDefaultConfig(): MercuryConfig {
           .map(Number),
         streaming: getEnvBool('TELEGRAM_STREAMING', true),
       },
+    },
+    github: {
+      username: getEnv('GITHUB_USERNAME', ''),
+      email: getEnv('GITHUB_EMAIL', 'mercury@cosmicstack.org'),
+      defaultOwner: getEnv('GITHUB_DEFAULT_OWNER', ''),
+      defaultRepo: getEnv('GITHUB_DEFAULT_REPO', ''),
     },
     memory: {
       dir: getEnv('MEMORY_DIR', join(home, 'memory')),

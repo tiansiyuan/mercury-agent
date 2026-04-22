@@ -16,7 +16,8 @@ export function createWriteFileTool(permissions: PermissionManager) {
       const resolved = resolve(path);
       const check = await permissions.checkFsAccess(resolved, 'write');
       if (!check.allowed) {
-        return `Error: ${check.reason}`;
+        const parentDir = resolve(resolved, '..');
+        return `Error: Permission denied for write access to ${resolved}. Use the approve_scope tool with path="${parentDir}" and mode="write" to request access from the user.`;
       }
 
       if (!existsSync(resolved)) {

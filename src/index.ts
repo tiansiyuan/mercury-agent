@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Command } from 'commander';
@@ -24,6 +24,7 @@ import { getManual } from './utils/manual.js';
 import { startBackground, stopDaemon, showLogs, getDaemonStatus, restartDaemon, tryAutoDaemonize } from './cli/daemon.js';
 import { installService, uninstallService, showServiceStatus, isServiceInstalled } from './cli/service.js';
 import { runWithWatchdog } from './cli/watchdog.js';
+import { setGitHubToken } from './utils/github.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkgVersion = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8')).version;
@@ -32,11 +33,18 @@ function hr() {
   console.log(chalk.dim('─'.repeat(50)));
 }
 
+const MERCURY_ASCII = [
+  '    __  _____________  ________  ________  __',
+  '   /  |/  / ____/ __ \\/ ____/ / / / __ \\/ < /',
+  '  / /|_/ / __/ / /_/ / /   / / / / /_/ /\\  / ',
+  ' / /  / / /___/ _, _/ /___/ /_/ / _, _/ / /  ',
+  '/_/  /_/_____/_/ |_|\\____/\\____/_/ |_| /_/   ',
+].filter(l => l.trim());
+
 function banner() {
   console.log('');
-  const art = figlet.textSync('MERCURY', { font: 'Slant', horizontalLayout: 'default' });
-  for (const line of art.split('\n')) {
-    if (line.trim()) console.log(chalk.bold.cyan(`  ${line}`));
+  for (const line of MERCURY_ASCII) {
+    console.log(chalk.bold.cyan(`  ${line}`));
   }
   console.log('');
   console.log(chalk.white('  an AI agent for personal tasks'));
@@ -46,9 +54,8 @@ function banner() {
 
 function splashScreen() {
   console.log('');
-  const art = figlet.textSync('MERCURY', { font: 'Slant', horizontalLayout: 'default' });
-  for (const line of art.split('\n')) {
-    if (line.trim()) console.log(chalk.bold.cyan(`  ${line}`));
+  for (const line of MERCURY_ASCII) {
+    console.log(chalk.bold.cyan(`  ${line}`));
   }
   console.log('');
   console.log(chalk.dim('  an AI agent for personal tasks'));
@@ -261,6 +268,27 @@ async function promptValidatedValue(
   }
 }
 
+function appendToEnv(key: string, value: string): void {
+  const envPath = join(getMercuryHome(), '.env');
+  let envContent = '';
+  if (existsSync(envPath)) {
+    envContent = readFileSync(envPath, 'utf-8');
+  }
+  const lines = envContent.split('\n').filter((l: string) => !l.startsWith(`${key}=`) && l.trim() !== '');
+  lines.push(`${key}=${value}`);
+  writeFileSync(envPath, lines.join('\n') + '\n', 'utf-8');
+  process.env[key] = value;
+}
+
+function parseGithubRepo(input: string): { owner: string; repo: string } | null {
+  const trimmed = input.trim().replace(/\/+$/, '');
+  const urlMatch = trimmed.match(/github\.com\/([^/]+)\/([^/]+)/);
+  if (urlMatch) return { owner: urlMatch[1], repo: urlMatch[2] };
+  const shortMatch = trimmed.match(/^([^/\s]+)\/([^/\s]+)$/);
+  if (shortMatch) return { owner: shortMatch[1], repo: shortMatch[2] };
+  return null;
+}
+
 async function configure(existingConfig?: MercuryConfig): Promise<void> {
   const isReconfig = !!existingConfig;
   const config = existingConfig ?? loadConfig();
@@ -448,6 +476,53 @@ async function configure(existingConfig?: MercuryConfig): Promise<void> {
 
   hr();
   console.log('');
+  console.log(chalk.bold.white('  GitHub Integration (optional)'));
+  console.log(chalk.dim('  Connect Mercury to GitHub so it can create PRs, manage issues,'));
+  console.log(chalk.dim('  review code, and co-author commits on your behalf.'));
+  console.log(chalk.dim('  Leave empty to skip. You can add it later with mercury doctor.'));
+  console.log('');
+
+  const ghUserCurrent = isReconfig && config.github.username ? ` [${config.github.username}]` : '';
+  const ghUsername = await ask(chalk.white(`  1. Your GitHub username${ghUserCurrent}: `));
+  if (ghUsername) config.github.username = ghUsername;
+
+  if (!config.github.email) {
+    config.github.email = 'mercury@cosmicstack.org';
+  }
+
+  console.log('');
+  console.log(chalk.dim('     You need a Personal Access Token (PAT) with repo access.'));
+  console.log(chalk.dim('     Fine-grained (recommended): github.com/settings/personal-access-tokens/new'));
+  console.log(chalk.dim('       → Permissions: Contents (R/W), Pull requests (R/W), Issues (R/W)'));
+  console.log(chalk.dim('     Classic: github.com/settings/tokens/new'));
+  console.log(chalk.dim('       → Scope: repo (full control)'));
+  const ghTokenCurrent = process.env.GITHUB_TOKEN ? ` [${maskKey(process.env.GITHUB_TOKEN)}]` : '';
+  const ghToken = await ask(chalk.white(`  2. GitHub PAT${ghTokenCurrent}: `));
+  if (ghToken) {
+    appendToEnv('GITHUB_TOKEN', ghToken);
+  }
+
+  if (config.github.username || process.env.GITHUB_TOKEN) {
+    console.log('');
+    console.log(chalk.dim('     Set a default repo so you can say "create an issue" without'));
+    console.log(chalk.dim('     specifying the repo every time. Enter owner/name or a full URL.'));
+    console.log(chalk.dim('     Example: hotheadhacker/mercury-agent'));
+    console.log(chalk.dim('     Example: https://github.com/hotheadhacker/mercury-agent'));
+    const ghOwnerCurrent = isReconfig && config.github.defaultOwner ? ` [${config.github.defaultOwner}/${config.github.defaultRepo}]` : '';
+    const ghRepoInput = await ask(chalk.white(`  3. Default repo${ghOwnerCurrent}: `));
+    if (ghRepoInput) {
+      const parsed = parseGithubRepo(ghRepoInput);
+      if (parsed) {
+        config.github.defaultOwner = parsed.owner;
+        config.github.defaultRepo = parsed.repo;
+      } else {
+        console.log(chalk.yellow('  Could not parse repo. Use format: owner/repo or a GitHub URL.'));
+      }
+    }
+  }
+
+  hr();
+  console.log('');
   console.log(chalk.bold.white('  Token Budget'));
   console.log('');
 
@@ -586,6 +661,9 @@ async function runAgent(isDaemon: boolean = false): Promise<void> {
 
     await telegram.send(content, `telegram:${pairedChatId}`);
   });
+  if (process.env.GITHUB_TOKEN) {
+    setGitHubToken(process.env.GITHUB_TOKEN);
+  }
 
   capabilities.registerAll();
 

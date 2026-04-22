@@ -385,6 +385,18 @@ export class Agent {
     if (this.tokenBudget.getUsagePercentage() > 70) {
       prompt += '\nBe concise to conserve tokens.';
     }
+    const toolNames = this.capabilities.getToolNames();
+    const githubTools = ['create_pr', 'review_pr', 'list_issues', 'create_issue', 'github_api'];
+    const hasGitHub = githubTools.some(t => toolNames.includes(t));
+    if (hasGitHub) {
+      let githubHint = '\n\nGitHub companion is active. You can create pull requests, review PRs, manage issues, and use the GitHub API.';
+      const { defaultOwner, defaultRepo } = this.config.github;
+      if (defaultOwner && defaultRepo) {
+        githubHint += ` Default repo: ${defaultOwner}/${defaultRepo}. Use this when the user doesn't specify a repo.`;
+      }
+      githubHint += ' When the user says "create a PR", use create_pr. When they ask about issues, use list_issues or create_issue. When they ask to review a PR, use review_pr. Always specify owner and repo parameters.';
+      prompt += githubHint;
+    }
     return prompt;
   }
 

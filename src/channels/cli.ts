@@ -13,6 +13,15 @@ import {
   type ArrowSelectOption,
 } from '../utils/arrow-select.js';
 
+const USER_PROMPT = '  You: ';
+const USER_PROMPT_VISIBLE_LEN = USER_PROMPT.length;
+const AGENT_PREFIX_LEN = USER_PROMPT_VISIBLE_LEN;
+
+function agentPrefix(name: string, suffix?: string): string {
+  const time = suffix ?? '';
+  return chalk.cyan(`  ${name}:`) + time;
+}
+
 export class CLIChannel extends BaseChannel {
   readonly type = 'cli' as const;
   private rl: readline.Interface | null = null;
@@ -22,6 +31,7 @@ export class CLIChannel extends BaseChannel {
   private outputInProgress = 0;
   private streamActive = false;
   private streamToolLines = 0;
+  private lastUserInput = '';
 
   constructor(agentName: string = 'Mercury') {
     super();
@@ -43,8 +53,11 @@ export class CLIChannel extends BaseChannel {
       input: process.stdin,
       output: process.stdout,
     });
+    this.rl.setPrompt(chalk.yellow(USER_PROMPT));
+    (this.rl as any)._promptLength = USER_PROMPT_VISIBLE_LEN;
 
     this.rl.on('line', (line) => {
+      this.lastUserInput = line.trim();
       const trimmed = line.trim();
       if (!trimmed) {
         this.showPrompt();
@@ -74,12 +87,9 @@ export class CLIChannel extends BaseChannel {
     this.beginOutput();
     const timeStr = elapsedMs != null ? chalk.dim(` (${(elapsedMs / 1000).toFixed(1)}s)`) : '';
     const rendered = renderMarkdown(content);
-    const indented = rendered
-      .split('\n')
-      .map((line: string) => `  ${line}`)
-      .join('\n');
+    const indented = this.indent(rendered);
     console.log('');
-    console.log(chalk.cyan(`  ${this.agentName}:`) + timeStr);
+    console.log(agentPrefix(this.agentName, timeStr));
     console.log(indented);
     console.log('');
     this.endOutput();
@@ -101,7 +111,7 @@ export class CLIChannel extends BaseChannel {
         ? `${(stat.size / 1024).toFixed(1)}KB`
         : `${stat.size}B`;
     console.log('');
-    console.log(chalk.cyan(`  ${this.agentName}:`) + chalk.dim(' (file)'));
+    console.log(agentPrefix(this.agentName, chalk.dim(' (file)')));
     console.log(chalk.dim(`  path: ${resolved}`));
     console.log(chalk.dim(`  size: ${sizeStr}`));
     console.log('');
@@ -170,11 +180,8 @@ export class CLIChannel extends BaseChannel {
     process.stdout.write(`\x1b[${totalLines}A`);
 
     const rendered = renderMarkdown(full);
-    const indented = rendered
-      .split('\n')
-      .map((line: string) => `  ${line}`)
-      .join('\n');
-    console.log(chalk.cyan(`  ${this.agentName}:`));
+    const indented = this.indent(rendered);
+    console.log(agentPrefix(this.agentName));
     console.log(indented);
     console.log('');
 
@@ -188,7 +195,8 @@ export class CLIChannel extends BaseChannel {
 
   showPrompt(): void {
     if (this.rl) {
-      process.stdout.write(chalk.yellow('  You: '));
+      process.stdout.write('\x1b[2K\r');
+      process.stdout.write(chalk.yellow(USER_PROMPT));
     }
   }
 
@@ -247,6 +255,13 @@ export class CLIChannel extends BaseChannel {
   private resumePrompt(): void {
     if (!this.ready || this.rl) return;
     this.createInterface();
+  }
+
+  private indent(text: string): string {
+    return text
+      .split('\n')
+      .map((line: string) => `  ${line}`)
+      .join('\n');
   }
 
   async prompt(question: string): Promise<string> {

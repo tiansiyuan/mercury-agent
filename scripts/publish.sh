@@ -11,21 +11,20 @@ echo "Package: ${PKG_NAME}"
 echo "Version: ${PKG_VERSION}"
 echo ""
 
-echo "1/5 Type checking..."
+echo "1/6 Type checking..."
 npm run typecheck
 
-echo "2/5 Building..."
-npm run build
+echo "2/6 Running tests..."
+npm run test
 
-echo "3/5 Verifying package contents..."
-npm pack --dry-run 2>&1 | head -20
+echo "3/6 Verifying package integrity (dry-run install)..."
+node scripts/verify-package.cjs
 
-echo ""
-echo "4/5 Verifying shebang..."
+echo "4/6 Verifying shebang..."
 head -1 dist/index.js
 
 echo ""
-echo "5/5 Publishing to npm..."
+echo "5/6 Publishing to npm..."
 npm publish --access public
 
 echo ""

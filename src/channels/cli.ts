@@ -209,7 +209,11 @@ export class CLIChannel extends BaseChannel {
       return full;
     }
 
+    process.stdout.write('\x1b7');
+
+    console.log('');
     console.log(chalk.cyan(`  ${this.agentName}:`));
+    console.log('');
 
     let full = '';
     for await (const chunk of content) {
@@ -219,26 +223,14 @@ export class CLIChannel extends BaseChannel {
     this.streamActive = false;
 
     if (!full.trim()) {
-      console.log('');
+      process.stdout.write('\x1b8');
+      process.stdout.write('\x1b[J');
       this.endOutput();
       return full;
     }
 
-    const termWidth = process.stdout.columns || 80;
-
-    let textLineCount = 0;
-    for (const line of full.split('\n')) {
-      const visualLen = line.replace(/\x1b\[[0-9;]*m/g, '').length;
-      textLineCount += Math.max(1, Math.ceil((visualLen + 2) / termWidth));
-    }
-
-    const totalLines = 1 + textLineCount + this.streamToolLines;
-
-    process.stdout.write(`\x1b[${totalLines}A`);
-    for (let i = 0; i < totalLines; i++) {
-      process.stdout.write('\x1b[2K\x1b[1B');
-    }
-    process.stdout.write(`\x1b[${totalLines}A`);
+    process.stdout.write('\x1b8');
+    process.stdout.write('\x1b[J');
 
     const block = this.formatBlock(this.agentName, '', full);
     for (const line of block) {

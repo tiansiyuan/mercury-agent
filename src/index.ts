@@ -934,6 +934,16 @@ async function runAgent(isDaemon: boolean = false): Promise<void> {
     return 'no';
   });
 
+  if (tgChannel) {
+    tgChannel.setOnPermissionMode((mode, chatId) => {
+      if (mode === 'allow-all') {
+        capabilities.permissions.setAutoApproveAll(true);
+        capabilities.permissions.addTempScope('/', true, true);
+        logger.info({ chatId }, 'Telegram: Allow All mode set for session');
+      }
+    });
+  }
+
   const activeCh = channels.getActiveChannels();
   const toolNames = capabilities.getToolNames();
 
@@ -942,6 +952,13 @@ async function runAgent(isDaemon: boolean = false): Promise<void> {
       console.log(chalk.dim(`  Creator: ${config.identity.creator}`));
     }
     hr();
+
+    const mode = cliChannel && await cliChannel.askPermissionMode?.();
+    if (mode === 'allow-all') {
+      capabilities.permissions.setAutoApproveAll(true);
+      capabilities.permissions.addTempScope('/', true, true);
+    }
+
     console.log('');
     console.log(chalk.green(`  ${name} is live. Type a message and press Enter.`));
     console.log(chalk.dim('  Ctrl+C to exit · /help for commands'));

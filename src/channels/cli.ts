@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
 import type { ChannelMessage } from '../types/channel.js';
-import { BaseChannel } from './base.js';
+import { BaseChannel, type PermissionMode } from './base.js';
 import { logger } from '../utils/logger.js';
 import { renderMarkdown } from '../utils/markdown.js';
 import { formatToolStep, formatToolResult } from '../utils/tool-label.js';
@@ -306,6 +306,48 @@ export class CLIChannel extends BaseChannel {
     return new Promise((resolve) => {
       this.rl?.question(question, (answer) => resolve(answer.trim()));
     });
+  }
+
+  async askPermissionMode(): Promise<PermissionMode> {
+    if (!process.stdout.isTTY) return 'ask-me';
+
+    this.suspendPrompt();
+
+    console.log('');
+    console.log(chalk.bold('  Permission Mode'));
+    console.log(chalk.dim('  Choose how Mercury handles risky actions this session.'));
+    console.log('');
+
+    const options: ArrowSelectOption[] = [
+      { value: 'ask-me', label: 'Ask Me — confirm before file writes, shell commands, and scope changes' },
+      { value: 'allow-all', label: 'Allow All — auto-approve everything (scopes, commands, loop continuation)' },
+    ];
+
+    try {
+      const selected = await selectWithArrowKeys('Select permission mode:', options, {
+        helperText: '↑↓ to move, Enter to select',
+      });
+
+      if (selected === 'allow-all') {
+        console.log('');
+        console.log(chalk.yellow('  ⚠ Allow All active for this session:'));
+        console.log(chalk.dim('     • All directory scopes auto-approved'));
+        console.log(chalk.dim('     • All shell commands auto-approved (except blocked)'));
+        console.log(chalk.dim('     • Loop detection will auto-continue'));
+        console.log(chalk.dim('     • Resets on restart'));
+        console.log('');
+      } else {
+        console.log('');
+        console.log(chalk.dim('  Confirm-before-act mode active.'));
+        console.log('');
+      }
+
+      return selected as PermissionMode;
+    } catch {
+      return 'ask-me';
+    } finally {
+      this.resumePrompt();
+    }
   }
 
   async askPermission(prompt: string): Promise<string> {

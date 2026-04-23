@@ -395,16 +395,21 @@ export class Agent {
                   }
                   const softLoop = loopDetector.detectSameTool();
                   if (softLoop && !loopWarningSent && channel && msg.channelType !== 'internal') {
-                    loopWarningSent = true;
-                    const shouldContinue = await channel.askToContinue(
-                      `${softLoop.tool} has been called ${softLoop.count}x in a row. This might be a loop.`,
-                      msg.channelId,
-                    ).catch(() => false);
-                    if (shouldContinue) {
+                    if (this.capabilities.permissions.isAutoApproveAll()) {
                       loopDetector.reset();
                       loopWarningSent = false;
                     } else {
-                      loopAbortController.abort();
+                      loopWarningSent = true;
+                      const shouldContinue = await channel.askToContinue(
+                        `${softLoop.tool} has been called ${softLoop.count}x in a row. This might be a loop.`,
+                        msg.channelId,
+                      ).catch(() => false);
+                      if (shouldContinue) {
+                        loopDetector.reset();
+                        loopWarningSent = false;
+                      } else {
+                        loopAbortController.abort();
+                      }
                     }
                   }
                   if (channel && msg.channelType !== 'internal') {
@@ -493,16 +498,21 @@ export class Agent {
                   }
                   const softLoop = loopDetector.detectSameTool();
                   if (softLoop && !loopWarningSent && channel && msg.channelType !== 'internal') {
-                    loopWarningSent = true;
-                    const shouldContinue = await channel.askToContinue(
-                      `${softLoop.tool} has been called ${softLoop.count}x in a row. This might be a loop.`,
-                      msg.channelId,
-                    ).catch(() => false);
-                    if (shouldContinue) {
+                    if (this.capabilities.permissions.isAutoApproveAll()) {
                       loopDetector.reset();
                       loopWarningSent = false;
                     } else {
-                      loopAbortController.abort();
+                      loopWarningSent = true;
+                      const shouldContinue = await channel.askToContinue(
+                        `${softLoop.tool} has been called ${softLoop.count}x in a row. This might be a loop.`,
+                        msg.channelId,
+                      ).catch(() => false);
+                      if (shouldContinue) {
+                        loopDetector.reset();
+                        loopWarningSent = false;
+                      } else {
+                        loopAbortController.abort();
+                      }
                     }
                   }
                   if (channel && msg.channelType !== 'internal') {

@@ -234,6 +234,7 @@ export class Agent {
       const isScheduled = msg.senderId === 'system' && msg.channelType !== 'internal';
       if (isInternal || isScheduled) {
         this.capabilities.permissions.setAutoApproveAll(true);
+        this.capabilities.permissions.addTempScope('/', true, true);
       }
 
     try {
@@ -695,6 +696,18 @@ Always specify owner and repo parameters on GitHub tools. The user's GitHub user
   private async handleScheduledTask(manifest: ScheduledTaskManifest): Promise<void> {
     logger.info({ task: manifest.id, channel: manifest.sourceChannelType }, 'Processing scheduled task');
     try {
+      const channel = manifest.sourceChannelType
+        ? this.channels.get(manifest.sourceChannelType as ChannelType)
+        : this.channels.getNotificationChannel();
+
+      if (channel && manifest.sourceChannelType !== 'internal') {
+        const skillInfo = manifest.skillName ? ` (${manifest.skillName})` : '';
+        await channel.send(
+          ` Scheduled task started${skillInfo}: ${manifest.description}\nAll actions auto-approved for this run.`,
+          manifest.sourceChannelId,
+        ).catch(() => {});
+      }
+
       let prompt = manifest.prompt || '';
       if (manifest.skillName) {
         const skillHint = `Invoke the skill "${manifest.skillName}" using the use_skill tool and follow its instructions.`;

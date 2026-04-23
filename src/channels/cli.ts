@@ -200,23 +200,24 @@ export class CLIChannel extends BaseChannel {
       this.stopSpinner();
       if (!this.turnHeaderPrinted) {
         this.turnHeaderPrinted = true;
-        console.log('');
-        console.log(agentName(this.agentName, ''));
-        console.log('');
+        process.stdout.write(chalk.dim(`  ${this.agentName} is thinking...\r`));
       }
-      process.stdout.write(chunk);
       full += chunk;
     }
     this.streamActive = false;
 
     if (!full.trim()) {
+      process.stdout.write('\x1b[2K\r');
       console.log('');
       this.endOutput();
       return full;
     }
 
-    console.log('');
-    console.log('');
+    process.stdout.write('\x1b[2K\r');
+    const block = this.formatBlock(this.agentName, '', full);
+    for (const line of block) {
+      console.log(line);
+    }
 
     this.endOutput();
     return full;
